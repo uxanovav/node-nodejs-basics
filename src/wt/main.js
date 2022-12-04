@@ -4,7 +4,6 @@ import {cpus} from 'os';
 const performCalculations = async () => {
     const cores = cpus();
     const workerPath = './src/wt/worker.js';
-    let result = [];
 
     const promises = cores.map( async (_,index) => {
         return new Promise((resolve, reject) => {
@@ -13,12 +12,13 @@ const performCalculations = async () => {
             })
             worker.on('message', resolve);
             worker.on('error', reject);
-        }).then(value => result.push(value));
+        })
     })
 
     try {
-        await Promise.all(promises);
-        console.log(result.sort((a,b)=> a.data - b.data));
+        await Promise.allSettled(promises).then((promisesResult) => {
+            promisesResult.forEach(promiseResult => console.log(promiseResult.value));
+        });
     } catch(error) {
         console.error(error);
     }
